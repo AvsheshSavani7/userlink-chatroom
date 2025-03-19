@@ -20,49 +20,14 @@ try {
     db = JSON.parse(rawData);
     console.log("Database loaded from file");
   } else {
-    console.log("Database file not found, using default data");
+    console.log("Database file not found, using empty collections");
+    // Initialize with empty collections instead of demo data
     db = {
-      users: [
-        {
-          id: "1",
-          name: "Demo User",
-          email: "demo@example.com",
-          createdAt: new Date().toISOString(),
-          assistantId: "1"
-        }
-      ],
-      assistants: [
-        {
-          id: "1",
-          userId: "1",
-          openaiAssistantId: "asst_demo123",
-          name: "Demo Assistant",
-          threadId: "thread_demo123",
-          createdAt: new Date().toISOString()
-        }
-      ],
-      files: [
-        {
-          id: "1",
-          userId: "1",
-          name: "demo_file.txt",
-          size: 1024,
-          type: "text/plain",
-          openaiFileId: "file_demo123",
-          assistantId: "1",
-          createdAt: new Date().toISOString()
-        }
-      ],
+      users: [],
+      assistants: [],
+      files: [],
       chat_threads: [],
-      messages: [
-        {
-          id: "1",
-          threadId: "thread_demo123",
-          content: "Hello! How can I help you?",
-          role: "assistant",
-          createdAt: new Date().toISOString()
-        }
-      ]
+      messages: []
     };
   }
 } catch (error) {
