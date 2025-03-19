@@ -1,4 +1,3 @@
-
 import { OpenAI } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { FileInfo } from '../types/file';
@@ -234,7 +233,7 @@ export const getChatHistory = (userId: string): ChatMessage[] => {
   const parsed: ChatHistory = JSON.parse(history);
   return parsed.messages.map(msg => ({
     ...msg,
-    timestamp: new msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
+    timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
   }));
 };
 
