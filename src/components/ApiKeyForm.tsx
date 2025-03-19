@@ -1,30 +1,34 @@
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Key, Check, AlertCircle, X } from "lucide-react";
+import { setApiKey, isApiKeySet } from "../services/openaiService";
+import { toast } from "sonner";
 
-import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Key, Check, AlertCircle } from 'lucide-react';
-import { setApiKey, isApiKeySet } from '../services/openaiService';
-import { toast } from 'sonner';
+interface ApiKeyFormProps {
+  onClose?: () => void;
+  userId?: string;
+}
 
-const ApiKeyForm = () => {
-  const [apiKey, setApiKeyInput] = useState('');
+const ApiKeyForm = ({ onClose, userId }: ApiKeyFormProps) => {
+  const [apiKey, setApiKeyInput] = useState("");
   const [isValidKey, setIsValidKey] = useState(false);
 
   // Check for environment variable API key on component mount
   useEffect(() => {
     const isKeySet = isApiKeySet();
     setIsValidKey(isKeySet);
-    
+
     if (isKeySet && import.meta.env.VITE_OPENAI_API_KEY) {
-      toast.success('Using OpenAI API key from environment variables');
+      toast.success("Using OpenAI API key from environment variables");
     }
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiKey.trim()) {
-      toast.error('Please enter a valid API key');
+      toast.error("Please enter a valid API key");
       return;
     }
 
@@ -32,12 +36,13 @@ const ApiKeyForm = () => {
       const result = setApiKey(apiKey.trim());
       if (result) {
         setIsValidKey(true);
-        toast.success('API key saved successfully');
+        toast.success("API key saved successfully");
+        if (onClose) onClose();
       } else {
-        throw new Error('Invalid API key format');
+        throw new Error("Invalid API key format");
       }
     } catch (error) {
-      toast.error('Failed to save API key');
+      toast.error("Failed to save API key");
       setIsValidKey(false);
     }
   };
@@ -52,8 +57,18 @@ const ApiKeyForm = () => {
             <Check className="w-3 h-3 mr-1" /> Configured
           </span>
         )}
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-6 w-6"
+            onClick={onClose}
+          >
+            <X size={16} />
+          </Button>
+        )}
       </div>
-      
+
       {import.meta.env.VITE_OPENAI_API_KEY ? (
         <div className="text-xs text-green-600 mb-3">
           Using API key from environment variables
@@ -74,7 +89,7 @@ const ApiKeyForm = () => {
                 className="h-8 text-sm"
               />
             </div>
-            
+
             <div className="flex items-center justify-between gap-2">
               <div className="text-[10px] text-gray-500 flex items-start gap-1">
                 <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
