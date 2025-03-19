@@ -27,23 +27,39 @@ try {
           id: "1",
           name: "Demo User",
           email: "demo@example.com",
+          createdAt: new Date().toISOString(),
+          assistantId: "1"
+        }
+      ],
+      assistants: [
+        {
+          id: "1",
+          userId: "1",
+          openaiAssistantId: "asst_demo123",
+          name: "Demo Assistant",
+          threadId: "thread_demo123",
           createdAt: new Date().toISOString()
         }
       ],
+      files: [
+        {
+          id: "1",
+          userId: "1",
+          name: "demo_file.txt",
+          size: 1024,
+          type: "text/plain",
+          openaiFileId: "file_demo123",
+          assistantId: "1",
+          createdAt: new Date().toISOString()
+        }
+      ],
+      chat_threads: [],
       messages: [
         {
           id: "1",
-          content: "Welcome to the chat app!",
-          userId: "1",
-          roomId: "1",
-          createdAt: new Date().toISOString()
-        }
-      ],
-      rooms: [
-        {
-          id: "1",
-          name: "General",
-          description: "General discussion",
+          threadId: "thread_demo123",
+          content: "Hello! How can I help you?",
+          role: "assistant",
           createdAt: new Date().toISOString()
         }
       ]
@@ -51,14 +67,20 @@ try {
   }
 } catch (error) {
   console.error("Error loading database:", error);
-  db = { users: [], messages: [], rooms: [] };
+  db = {
+    users: [],
+    assistants: [],
+    files: [],
+    chat_threads: [],
+    messages: []
+  };
 }
 
 // API routes
 app.get("/api", (req, res) => {
   res.json({
     message: "API is working",
-    endpoints: ["/api/users", "/api/messages", "/api/rooms"]
+    endpoints: ["/api/users", "/api/assistants", "/api/files", "/api/messages"]
   });
 });
 
@@ -68,6 +90,18 @@ app.get("/api/:resource", (req, res) => {
   if (!db[resource]) {
     return res.status(404).json({ error: `Resource "${resource}" not found` });
   }
+
+  // Handle query parameters for filtering
+  const queryParams = req.query;
+  if (Object.keys(queryParams).length > 0) {
+    const filtered = db[resource].filter((item) => {
+      return Object.entries(queryParams).every(([key, value]) => {
+        return item[key] === value;
+      });
+    });
+    return res.json(filtered);
+  }
+
   return res.json(db[resource]);
 });
 
@@ -95,8 +129,10 @@ app.post("/api/:resource", (req, res) => {
 
   const newItem = {
     ...req.body,
-    id: String(Date.now()),
-    createdAt: new Date().toISOString()
+    // Only add id if not provided
+    id: req.body.id || String(Date.now()),
+    // Only add createdAt if not provided
+    createdAt: req.body.createdAt || new Date().toISOString()
   };
 
   db[resource].push(newItem);
@@ -105,6 +141,22 @@ app.post("/api/:resource", (req, res) => {
 
 // PUT update item
 app.put("/api/:resource/:id", (req, res) => {
+  const { resource, id } = req.params;
+  if (!db[resource]) {
+    return res.status(404).json({ error: `Resource "${resource}" not found` });
+  }
+
+  const index = db[resource].findIndex((item) => item.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: `Item with ID "${id}" not found` });
+  }
+
+  db[resource][index] = { ...db[resource][index], ...req.body };
+  return res.json(db[resource][index]);
+});
+
+// PATCH update item (partial)
+app.patch("/api/:resource/:id", (req, res) => {
   const { resource, id } = req.params;
   if (!db[resource]) {
     return res.status(404).json({ error: `Resource "${resource}" not found` });

@@ -4,15 +4,39 @@
       "id": "1",
       "name": "Demo User",
       "email": "demo@example.com",
+      "createdAt": "2024-03-19T12:00:00.000Z",
+      "assistantId": "1"
+    }
+  ],
+  "assistants": [
+    {
+      "id": "1",
+      "userId": "1",
+      "openaiAssistantId": "asst_demo123",
+      "name": "Demo Assistant",
+      "threadId": "thread_demo123",
       "createdAt": "2024-03-19T12:00:00.000Z"
     }
   ],
+  "files": [
+    {
+      "id": "1",
+      "userId": "1",
+      "name": "demo_file.txt",
+      "size": 1024,
+      "type": "text/plain",
+      "openaiFileId": "file_demo123",
+      "assistantId": "1",
+      "createdAt": "2024-03-19T12:00:00.000Z"
+    }
+  ],
+  "chat_threads": [],
   "messages": [
     {
       "id": "1",
-      "content": "Welcome to the chat app!",
-      "userId": "1",
-      "roomId": "1",
+      "threadId": "thread_demo123",
+      "content": "Hello! How can I help you?",
+      "role": "assistant",
       "createdAt": "2024-03-19T12:00:00.000Z"
     }
   ],
