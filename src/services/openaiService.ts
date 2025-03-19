@@ -1,15 +1,21 @@
+
 import { OpenAI } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { FileInfo } from '../types/file';
 
-// Initialize OpenAI client
+// Initialize OpenAI client with API key from environment variable or local storage
+const getApiKey = () => {
+  return import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('openai_api_key') || '';
+};
+
 const openai = new OpenAI({
-  apiKey: localStorage.getItem('openai_api_key') || '',
+  apiKey: getApiKey(),
   dangerouslyAllowBrowser: true,
 });
 
 // Local storage keys
 const VECTORS_KEY_PREFIX = 'openai_vectors_';
+const ASSISTANTS_KEY_PREFIX = 'openai_assistants_';
 const API_KEY = 'openai_api_key';
 
 // Interfaces
@@ -36,6 +42,16 @@ export interface ChatHistory {
   lastUpdated: Date;
 }
 
+export interface UserAssistant {
+  id: string;
+  assistantId: string;
+  name: string;
+  description: string;
+  threadId: string | null;
+  userId: string;
+  createdAt: Date;
+}
+
 // Functions to manage OpenAI API key
 export const setApiKey = (key: string) => {
   localStorage.setItem(API_KEY, key);
@@ -44,7 +60,7 @@ export const setApiKey = (key: string) => {
 };
 
 export const isApiKeySet = () => {
-  return !!localStorage.getItem(API_KEY);
+  return !!getApiKey();
 };
 
 // Function to create vector embeddings from file content
@@ -104,6 +120,136 @@ export const createVectorEmbeddings = async (
   } catch (error) {
     console.error('Error creating vector embeddings:', error);
     return false;
+  }
+};
+
+// Functions to manage user-specific OpenAI assistants
+export const createUserAssistant = async (
+  name: string,
+  description: string,
+  userId: string
+): Promise<UserAssistant | null> => {
+  try {
+    if (!isApiKeySet()) {
+      throw new Error('OpenAI API key is not set');
+    }
+
+    // Create OpenAI assistant
+    const assistant = await openai.beta.assistants.create({
+      name,
+      instructions: description,
+      model: "gpt-3.5-turbo",
+      tools: [{ type: "retrieval" }],
+    });
+
+    // Create thread for the assistant
+    const thread = await openai.beta.threads.create();
+
+    // Save assistant metadata
+    const userAssistant: UserAssistant = {
+      id: uuidv4(),
+      assistantId: assistant.id,
+      name,
+      description,
+      threadId: thread.id,
+      userId,
+      createdAt: new Date(),
+    };
+
+    const userAssistants = getUserAssistants(userId) || [];
+    userAssistants.push(userAssistant);
+    saveUserAssistants(userId, userAssistants);
+
+    return userAssistant;
+  } catch (error) {
+    console.error('Error creating user assistant:', error);
+    return null;
+  }
+};
+
+export const getUserAssistants = (userId: string): UserAssistant[] | null => {
+  const assistants = localStorage.getItem(`${ASSISTANTS_KEY_PREFIX}${userId}`);
+  return assistants ? JSON.parse(assistants) : null;
+};
+
+export const saveUserAssistants = (userId: string, assistants: UserAssistant[]) => {
+  localStorage.setItem(`${ASSISTANTS_KEY_PREFIX}${userId}`, JSON.stringify(assistants));
+};
+
+export const sendMessageToAssistant = async (
+  message: string,
+  userAssistantId: string,
+  userId: string
+): Promise<string> => {
+  try {
+    if (!isApiKeySet()) {
+      throw new Error('OpenAI API key is not set');
+    }
+
+    // Get user assistant
+    const userAssistants = getUserAssistants(userId) || [];
+    const userAssistant = userAssistants.find(a => a.id === userAssistantId);
+    
+    if (!userAssistant) {
+      throw new Error('Assistant not found');
+    }
+
+    if (!userAssistant.threadId) {
+      // Create thread if it doesn't exist
+      const thread = await openai.beta.threads.create();
+      userAssistant.threadId = thread.id;
+      saveUserAssistants(userId, userAssistants);
+    }
+
+    // Add message to thread
+    await openai.beta.threads.messages.create(userAssistant.threadId!, {
+      role: "user",
+      content: message,
+    });
+
+    // Run the assistant
+    const run = await openai.beta.threads.runs.create(userAssistant.threadId!, {
+      assistant_id: userAssistant.assistantId,
+    });
+
+    // Wait for the run to complete
+    let runStatus = await openai.beta.threads.runs.retrieve(
+      userAssistant.threadId!,
+      run.id
+    );
+
+    // Poll for completion (in a real app, you might want to use a more sophisticated approach)
+    while (runStatus.status !== "completed" && runStatus.status !== "failed") {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      runStatus = await openai.beta.threads.runs.retrieve(
+        userAssistant.threadId!,
+        run.id
+      );
+    }
+
+    if (runStatus.status === "failed") {
+      throw new Error("Assistant run failed");
+    }
+
+    // Get messages from thread
+    const messages = await openai.beta.threads.messages.list(userAssistant.threadId!);
+    
+    // Return the last assistant message
+    const assistantMessages = messages.data.filter(msg => msg.role === "assistant");
+    if (assistantMessages.length === 0) {
+      return "No response from assistant.";
+    }
+    
+    // Get the content of the latest message
+    const latestMessage = assistantMessages[0];
+    if (typeof latestMessage.content[0] === 'object' && 'text' in latestMessage.content[0]) {
+      return latestMessage.content[0].text.value;
+    }
+    
+    return "Couldn't parse assistant response.";
+  } catch (error) {
+    console.error('Error sending message to assistant:', error);
+    return "Error communicating with the assistant.";
   }
 };
 
