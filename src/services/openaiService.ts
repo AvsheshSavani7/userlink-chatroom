@@ -1,4 +1,3 @@
-
 import { OpenAI } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { FileInfo } from '../types/file';
@@ -134,12 +133,12 @@ export const createUserAssistant = async (
       throw new Error('OpenAI API key is not set');
     }
 
-    // Create OpenAI assistant
+    // Create OpenAI assistant with the correct tool type
     const assistant = await openai.beta.assistants.create({
       name,
       instructions: description,
       model: "gpt-3.5-turbo",
-      tools: [{ type: "retrieval" }],
+      tools: [{ type: "file_search" }],
     });
 
     // Create thread for the assistant
