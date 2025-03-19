@@ -42,7 +42,7 @@ const UserNameForm = () => {
       );
 
       toast.success(`Welcome, ${name}! Your personal AI assistant is ready.`);
-      navigate("/chat");
+      navigate(`/chat/${user.id}`);
     } catch (error) {
       console.error("Error creating tenant:", error);
       toast.error("Failed to create your account. Please try again.");
