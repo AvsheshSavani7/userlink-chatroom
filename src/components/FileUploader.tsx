@@ -4,14 +4,8 @@ import { Upload, X, File as FileIcon, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAppSelector } from '../store/hooks';
-
-interface FileInfo {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
-}
+import { createVectorEmbeddings, isApiKeySet } from '../services/openaiService';
+import { FileInfo } from '../types/file';
 
 interface FileUploaderProps {
   onFileUploaded: (file: FileInfo) => void;
@@ -20,6 +14,7 @@ interface FileUploaderProps {
 const FileUploader = ({ onFileUploaded }: FileUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const userId = useAppSelector(state => state.user.id);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -64,26 +59,78 @@ const FileUploader = ({ onFileUploaded }: FileUploaderProps) => {
     uploadFile(file);
   };
 
-  const uploadFile = (file: File) => {
+  const uploadFile = async (file: File) => {
     setIsUploading(true);
     
-    // Create object URL for local preview
-    const fileUrl = URL.createObjectURL(file);
-    
-    // Simulate upload delay
-    setTimeout(() => {
+    try {
+      // Create object URL for local preview
+      const fileUrl = URL.createObjectURL(file);
+      
+      // Read file content
+      const fileContent = await readFileContent(file);
+      
       const fileInfo: FileInfo = {
         id: Date.now().toString(),
         name: file.name,
         size: file.size,
         type: file.type,
         url: fileUrl,
+        content: fileContent
       };
       
       onFileUploaded(fileInfo);
+      
+      // If OpenAI API key is configured, process the file
+      if (isApiKeySet()) {
+        setIsProcessing(true);
+        
+        // Create vector embeddings
+        const success = await createVectorEmbeddings(
+          fileContent,
+          file.name,
+          fileInfo.id,
+          file.size,
+          file.type,
+          userId
+        );
+        
+        if (success) {
+          toast.success(`${file.name} processed and added to knowledge base`);
+        } else {
+          toast.error(`Failed to process ${file.name} for AI responses`);
+        }
+        
+        setIsProcessing(false);
+      }
+      
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast.error(`Error processing file: ${(error as Error).message}`);
+    } finally {
       setIsUploading(false);
-      toast.success(`${file.name} uploaded successfully`);
-    }, 1500);
+    }
+  };
+
+  const readFileContent = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (file.type === 'text/plain') {
+        // Read as text for TXT files
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve(e.target?.result as string || '');
+        };
+        reader.onerror = () => {
+          reject(new Error('Failed to read file'));
+        };
+        reader.readAsText(file);
+      } else if (file.type === 'application/pdf') {
+        // For PDF, we're just returning a placeholder message since parsing PDF content
+        // requires additional libraries like pdf.js
+        resolve(`[PDF Content from: ${file.name}] - To fully support PDF content extraction, a PDF parser library would be needed.`);
+      } else {
+        reject(new Error('Unsupported file type'));
+      }
+    });
   };
 
   return (
@@ -118,7 +165,7 @@ const FileUploader = ({ onFileUploaded }: FileUploaderProps) => {
         variant="outline"
         className="text-sm rounded-lg h-9"
         onClick={() => document.getElementById('file-upload')?.click()}
-        disabled={isUploading}
+        disabled={isUploading || isProcessing}
       >
         {isUploading ? (
           <div className="typing-indicator">
@@ -126,10 +173,18 @@ const FileUploader = ({ onFileUploaded }: FileUploaderProps) => {
             <span></span>
             <span></span>
           </div>
+        ) : isProcessing ? (
+          <span className="text-xs">Processing...</span>
         ) : (
           'Select File'
         )}
       </Button>
+      
+      {!isApiKeySet() && (
+        <p className="mt-3 text-xs text-amber-600">
+          OpenAI API key not configured. Files won't be processed for AI responses.
+        </p>
+      )}
     </div>
   );
 };

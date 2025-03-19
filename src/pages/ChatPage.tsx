@@ -12,20 +12,20 @@ import MessageItem from '../components/MessageItem';
 import FileUploader from '../components/FileUploader';
 import FileItem from '../components/FileItem';
 import FileViewer from '../components/FileViewer';
+import ApiKeyForm from '../components/ApiKeyForm';
+import { FileInfo } from '../types/file';
+import { 
+  generateChatResponse, 
+  saveChatHistory, 
+  getChatHistory,
+  isApiKeySet
+} from '../services/openaiService';
 
 interface Message {
   id: string;
   content: string;
   isUser: boolean;
   timestamp: Date;
-}
-
-interface FileInfo {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
 }
 
 const ChatPage = () => {
@@ -35,6 +35,7 @@ const ChatPage = () => {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [showUploader, setShowUploader] = useState(false);
+  const [showApiForm, setShowApiForm] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -48,28 +49,41 @@ const ChatPage = () => {
     }
   }, [isAuthenticated, navigate]);
   
-  // Add welcome message
+  // Load chat history from localStorage
   useEffect(() => {
-    if (isAuthenticated && messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: Date.now().toString(),
-        content: `Hello ${userName}! Welcome to Minimalist Chat. How can I assist you today?`,
-        isUser: false,
-        timestamp: new Date()
-      };
-      
-      setTimeout(() => {
-        setMessages([welcomeMessage]);
-      }, 500);
+    if (isAuthenticated && userId) {
+      const savedMessages = getChatHistory(userId);
+      if (savedMessages && savedMessages.length > 0) {
+        setMessages(savedMessages);
+      } else {
+        // Add welcome message if no history
+        const welcomeMessage: Message = {
+          id: Date.now().toString(),
+          content: `Hello ${userName}! Welcome to the AI-powered chat. How can I assist you today?`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setTimeout(() => {
+          setMessages([welcomeMessage]);
+        }, 500);
+      }
     }
-  }, [isAuthenticated, userName, messages.length]);
+  }, [isAuthenticated, userId, userName]);
+  
+  // Save chat history when messages change
+  useEffect(() => {
+    if (isAuthenticated && userId && messages.length > 0) {
+      saveChatHistory(userId, messages);
+    }
+  }, [messages, isAuthenticated, userId]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
     
     const userMessage: Message = {
@@ -82,38 +96,52 @@ const ChatPage = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     
-    // Simulate assistant typing
+    // Show typing indicator
     setIsTyping(true);
     
-    // Simulate assistant response
-    setTimeout(() => {
+    try {
+      // Check if OpenAI API key is set
+      if (!isApiKeySet()) {
+        setTimeout(() => {
+          const noApiKeyMessage: Message = {
+            id: Date.now().toString(),
+            content: "OpenAI API key is not configured. Please set your API key to enable AI-powered responses.",
+            isUser: false,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, noApiKeyMessage]);
+          setIsTyping(false);
+          setShowApiForm(true);
+        }, 1000);
+        return;
+      }
+      
+      // Generate response from OpenAI
+      const response = await generateChatResponse(
+        messages,
+        inputMessage,
+        userId
+      );
+      
       const assistantMessage: Message = {
         id: Date.now().toString(),
-        content: getAssistantResponse(inputMessage),
+        content: response,
         isUser: false,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error generating response:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: "Sorry, I couldn't generate a response. Please try again.",
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500 + Math.random() * 1000);
-  };
-  
-  const getAssistantResponse = (userInput: string) => {
-    const lowercaseInput = userInput.toLowerCase();
-    
-    if (lowercaseInput.includes('hello') || lowercaseInput.includes('hi')) {
-      return `Hello ${userName}! How can I help you today?`;
-    } else if (lowercaseInput.includes('how are you')) {
-      return "I'm just a digital assistant, but I'm functioning well. Thank you for asking! How can I assist you?";
-    } else if (lowercaseInput.includes('thank')) {
-      return "You're welcome! Feel free to ask if you need anything else.";
-    } else if (lowercaseInput.includes('file') || lowercaseInput.includes('document') || lowercaseInput.includes('upload')) {
-      return "You can upload PDF or TXT files using the file upload panel on the left side. I can help you analyze or discuss those documents.";
-    } else if (lowercaseInput.includes('help')) {
-      return "I can chat with you, answer questions, or help you with uploaded documents. What would you like assistance with?";
-    } else {
-      return "I understand you've sent a message. How can I help you with that?";
     }
   };
   
@@ -127,6 +155,17 @@ const ChatPage = () => {
   const handleFileUpload = (file: FileInfo) => {
     setFiles(prev => [...prev, file]);
     setShowUploader(false);
+    
+    // Notify user about the file being added
+    if (!isApiKeySet()) {
+      toast.info('Set your OpenAI API key to enable AI responses about this document', {
+        duration: 5000,
+        action: {
+          label: 'Set Key',
+          onClick: () => setShowApiForm(true),
+        },
+      });
+    }
   };
   
   const handleFileDelete = (fileId: string) => {
@@ -151,7 +190,7 @@ const ChatPage = () => {
           >
             <ChevronLeft size={20} />
           </Button>
-          <h1 className="text-xl font-semibold">Minimalist Chat</h1>
+          <h1 className="text-xl font-semibold">AI Chat Assistant</h1>
         </div>
         <div className="text-sm text-gray-500">
           Logged in as <span className="font-medium text-brand">{userName}</span>
@@ -168,7 +207,10 @@ const ChatPage = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => setShowUploader(!showUploader)}
+                onClick={() => {
+                  setShowUploader(!showUploader);
+                  setShowApiForm(false);
+                }}
                 className="h-8 w-8"
               >
                 {showUploader ? <X size={16} /> : <Plus size={16} />}
@@ -177,10 +219,22 @@ const ChatPage = () => {
             
             {showUploader ? (
               <FileUploader onFileUploaded={handleFileUpload} />
+            ) : showApiForm ? (
+              <ApiKeyForm />
             ) : (
-              <p className="text-xs text-gray-500">
-                Upload PDFs or text files to reference in your chat
-              </p>
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-gray-500">
+                  Upload PDFs or text files to reference in your chat
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowApiForm(!showApiForm)}
+                  className="h-7 text-xs"
+                >
+                  API Key
+                </Button>
+              </div>
             )}
           </div>
           
