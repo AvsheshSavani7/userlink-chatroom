@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Send, ChevronLeft, Plus, X } from 'lucide-react';
+import { Send, ChevronLeft, Plus, X, Bot, User } from 'lucide-react';
 import MessageItem from '../components/MessageItem';
 import FileUploader from '../components/FileUploader';
 import FileItem from '../components/FileItem';
