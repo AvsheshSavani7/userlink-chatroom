@@ -12,7 +12,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "netlify:dev": "netlify dev"
+    "netlify:dev": "netlify dev",
+    "postinstall": "cd netlify/functions && npm install"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

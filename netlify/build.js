@@ -6,15 +6,54 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Copy the database file to the functions directory
+// Define paths
 const sourceFile = path.resolve(__dirname, "../db.json");
 const targetDir = path.resolve(__dirname, "functions");
+const targetFile = path.join(targetDir, "db.json");
 
 // Make sure the target directory exists
 if (!fs.existsSync(targetDir)) {
   fs.mkdirSync(targetDir, { recursive: true });
 }
 
-// Copy the file
-fs.copyFileSync(sourceFile, path.join(targetDir, "db.json"));
-console.log("Database file copied to functions directory");
+// Check if source db.json exists
+if (fs.existsSync(sourceFile)) {
+  // Copy the file if it exists
+  console.log("Copying existing db.json file...");
+  fs.copyFileSync(sourceFile, targetFile);
+  console.log("Database file copied to functions directory");
+} else {
+  // Create a default db.json file if the original doesn't exist
+  console.log("Source db.json not found. Creating default database file...");
+  const defaultDbContent = {
+    users: [
+      {
+        id: "1",
+        name: "Demo User",
+        email: "demo@example.com",
+        createdAt: new Date().toISOString()
+      }
+    ],
+    messages: [
+      {
+        id: "1",
+        content: "Welcome to the chat app!",
+        userId: "1",
+        roomId: "1",
+        createdAt: new Date().toISOString()
+      }
+    ],
+    rooms: [
+      {
+        id: "1",
+        name: "General",
+        description: "General discussion",
+        createdAt: new Date().toISOString()
+      }
+    ]
+  };
+
+  // Write the default database file
+  fs.writeFileSync(targetFile, JSON.stringify(defaultDbContent, null, 2));
+  console.log("Default database file created in functions directory");
+}

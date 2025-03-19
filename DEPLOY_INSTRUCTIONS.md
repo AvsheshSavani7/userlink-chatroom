@@ -79,6 +79,8 @@ In the Netlify Dashboard:
 
 ## Important Notes
 
+- **Database File**: The build script will create a default database file if `db.json` is not found in the repository. This ensures the build won't fail during deployment.
+
 - **Database Persistence**: The JSON Server database on Netlify isn't persistent between deployments or server restarts. For a production app, consider using a real database service.
 
 - **API Key Security**: The OpenAI API key is included in your frontend code, which is not recommended for production. For better security, use Netlify Functions to make API calls server-side.
@@ -87,9 +89,13 @@ In the Netlify Dashboard:
 
 ## Troubleshooting
 
-- **Build Failures**: Check the build logs in the Netlify Dashboard.
+- **Build Failures**: 
+  - Check the build logs in the Netlify Dashboard
+  - If you see "Error: ENOENT: no such file or directory, copyfile '/opt/build/repo/db.json'", ensure you've committed the latest changes with the updated build script that handles missing db.json
+
 - **API Not Working**: 
   - Check the Functions logs in the Netlify Dashboard
   - Ensure the `.env.production` file has the correct API path
-  - Verify that `db.json` is being properly copied during build
+  - Verify that the API function is properly installed with dependencies
+
 - **CORS Issues**: If you encounter CORS errors, check the JSON Server configuration in the function file. 

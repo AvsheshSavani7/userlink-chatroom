@@ -31,7 +31,7 @@ dist-ssr
 .env.production.local
 
 # JSON Server
-db.json
+# db.json
 
 # Local Netlify folder
 .netlify

@@ -5,7 +5,7 @@ import { exec } from "child_process";
 // Import the function handler
 import { handler } from "./functions/api.cjs";
 
-console.log("Starting test server for Netlify function...");
+console.log("Starting test server for Netlify function.");
 
 // Define a simple test server to handle the request
 const server = createServer(async (req, res) => {

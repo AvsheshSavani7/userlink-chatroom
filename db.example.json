@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Demo User",
+      "email": "demo@example.com",
+      "createdAt": "2024-03-19T12:00:00.000Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "1",
+      "content": "Welcome to the chat app!",
+      "userId": "1",
+      "roomId": "1",
+      "createdAt": "2024-03-19T12:00:00.000Z"
+    }
+  ],
+  "rooms": []
+}

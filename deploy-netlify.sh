@@ -8,6 +8,13 @@ if ! command -v netlify &> /dev/null; then
     npm install -g netlify-cli
 fi
 
+# Ensure db.json exists (copy from example if not)
+if [ ! -f "db.json" ] && [ -f "db.example.json" ]; then
+    echo "db.json not found. Copying from db.example.json..."
+    cp db.example.json db.json
+    echo "Created db.json from example file."
+fi
+
 # Build the project
 echo "Building the project..."
 npm run build
