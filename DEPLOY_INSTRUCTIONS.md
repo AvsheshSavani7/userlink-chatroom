@@ -9,14 +9,14 @@ This guide provides step-by-step instructions for deploying this chat applicatio
 
 ## Local Testing Before Deployment
 
-You can test the complete Netlify setup locally before deploying:
+You can test the application locally before deploying:
 
 ```bash
 # Build the application
 npm run build
 
-# Run a simple test of the API function
-node netlify/test-function.js
+# Run a simple test of the API functionality
+node netlify/test-simple.js
 ```
 
 ## Deployment Steps
@@ -79,15 +79,22 @@ In the Netlify Dashboard:
 
 ## Important Notes
 
+- **Simplified API**: We're using a simplified Express-based API instead of json-server to avoid dependency issues on Netlify Functions.
+
 - **Database File**: The build script will create a default database file if `db.json` is not found in the repository. This ensures the build won't fail during deployment.
 
-- **Database Persistence**: The JSON Server database on Netlify isn't persistent between deployments or server restarts. For a production app, consider using a real database service.
+- **Database Persistence**: The database on Netlify isn't persistent between deployments or server restarts. For a production app, consider using a real database service.
 
 - **API Key Security**: The OpenAI API key is included in your frontend code, which is not recommended for production. For better security, use Netlify Functions to make API calls server-side.
 
 - **Custom Domain**: You can set up a custom domain for your app in the Netlify Dashboard under Domain settings.
 
 ## Troubleshooting
+
+- **Function Dependencies**: If you see "Cannot find module" errors in the function logs, check that:
+  - The function dependencies are correctly installed
+  - The `netlify.toml` file has the correct `[functions]` configuration
+  - The postinstall script is running correctly during the build process
 
 - **Build Failures**: 
   - Check the build logs in the Netlify Dashboard
@@ -98,4 +105,4 @@ In the Netlify Dashboard:
   - Ensure the `.env.production` file has the correct API path
   - Verify that the API function is properly installed with dependencies
 
-- **CORS Issues**: If you encounter CORS errors, check the JSON Server configuration in the function file. 
+- **CORS Issues**: If you encounter CORS errors, our Express API has CORS configured, but you may need to modify the CORS configuration in the function file for specific needs. 

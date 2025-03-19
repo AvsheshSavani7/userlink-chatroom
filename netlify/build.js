@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
 // Get the directory name in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -56,4 +57,13 @@ if (fs.existsSync(sourceFile)) {
   // Write the default database file
   fs.writeFileSync(targetFile, JSON.stringify(defaultDbContent, null, 2));
   console.log("Default database file created in functions directory");
+}
+
+// Ensure function dependencies are installed
+console.log("Installing function dependencies...");
+try {
+  execSync("npm run functions:install", { stdio: "inherit" });
+  console.log("Function dependencies installed successfully");
+} catch (error) {
+  console.error("Error installing function dependencies:", error);
 }
