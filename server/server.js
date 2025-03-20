@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 
+const router = jsonServer.router(path.join(__dirname, "db.json"));
 // Create server
 const server = express();
 
@@ -12,7 +13,6 @@ const PORT = process.env.PORT || 3002;
 
 // Enable CORS for all origins
 server.use(cors());
-
 // Parse JSON bodies
 server.use(express.json());
 
@@ -38,6 +38,7 @@ server.get("/", (req, res) => {
   });
 });
 
+server.use(router);
 // Health check endpoint for Render
 server.get("/health", (req, res) => {
   res.json({
