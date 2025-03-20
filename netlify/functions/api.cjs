@@ -14,7 +14,8 @@ app.use(express.json());
 // Load database file or create default data
 let db;
 try {
-  const dbPath = path.join(__dirname, "db.json");
+  // const dbPath = path.join(__dirname, "db.json");
+  const dbPath = path.join("/tmp", "db.json");
   console.log("Looking for database at:", dbPath);
   console.log("Current directory:", __dirname);
   console.log("Directory contents:", fs.readdirSync(__dirname).join(", "));
