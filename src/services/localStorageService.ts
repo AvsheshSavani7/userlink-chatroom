@@ -12,7 +12,7 @@ export type User = {
 export type Assistant = {
   id: string;
   userId: string;
-  openaiAssistantId: string;
+  openai_id: string;
   name: string;
   threadId?: string;
   createdAt: string;
@@ -147,7 +147,7 @@ export const deleteUser = (userId: string): boolean => {
 // Assistant-related functions
 export const createAssistant = (
   userId: string,
-  openaiAssistantId: string,
+  openai_id: string,
   name: string,
   threadId?: string
 ): Assistant => {
@@ -156,7 +156,7 @@ export const createAssistant = (
   const newAssistant: Assistant = {
     id: uuidv4(),
     userId,
-    openaiAssistantId,
+    openai_id,
     name,
     threadId,
     createdAt: new Date().toISOString()

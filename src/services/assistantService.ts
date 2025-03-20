@@ -8,11 +8,16 @@ import { v4 as uuidv4 } from "uuid";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_RENDER_API_URL ||
-  "http://localhost:3002";
+  "http://localhost:5001/api";
 
 // Initialize OpenAI client with API key from environment variable or .env
 const getApiKey = () => {
   return import.meta.env.VITE_OPENAI_API_KEY || "";
+};
+
+// Get organization ID if available
+const getOrgId = () => {
+  return import.meta.env.VITE_OPENAI_ORG_ID || "";
 };
 
 // Create OpenAI client
@@ -22,13 +27,28 @@ const createOpenAIClient = () => {
     throw new Error("OpenAI API key is not set");
   }
 
-  return new OpenAI({
+  interface OpenAIConfig {
+    apiKey: string;
+    dangerouslyAllowBrowser: boolean;
+    defaultHeaders: Record<string, string>;
+    organization?: string;
+  }
+
+  const config: OpenAIConfig = {
     apiKey,
     dangerouslyAllowBrowser: true, // Only for frontend development, not for production
     defaultHeaders: {
       "OpenAI-Beta": "assistants=v2"
     }
-  });
+  };
+
+  // Add organization if available
+  const orgId = getOrgId();
+  if (orgId) {
+    config.organization = orgId;
+  }
+
+  return new OpenAI(config);
 };
 
 // Alternative explicit API client creation with headers
@@ -42,11 +62,17 @@ const createOpenAIRequest = async (
     throw new Error("OpenAI API key is not set");
   }
 
-  const headers = {
-    Authorization: `Bearer ${apiKey}`,
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "OpenAI-Beta": "assistants=v2"
+    "OpenAI-Beta": "assistants=v2",
+    Authorization: `Bearer ${apiKey}`
   };
+
+  // Add organization header if available
+  const orgId = getOrgId();
+  if (orgId) {
+    headers["OpenAI-Organization"] = orgId;
+  }
 
   const url = `https://api.openai.com/v1/${endpoint}`;
 
@@ -80,7 +106,7 @@ export interface User {
 export interface Assistant {
   id: string;
   userId: string;
-  openaiAssistantId: string;
+  openai_id: string;
   name: string;
   threadId?: string;
   createdAt: string;
@@ -144,6 +170,11 @@ export const createUserWithAssistant = async (name: string): Promise<User> => {
       })
     });
 
+    if (!userResponse.ok) {
+      const errorData = await userResponse.json();
+      throw new Error(`User creation failed: ${JSON.stringify(errorData)}`);
+    }
+
     const user = await userResponse.json();
 
     // Create an OpenAI assistant using direct API call with v2 header
@@ -166,7 +197,8 @@ export const createUserWithAssistant = async (name: string): Promise<User> => {
       body: JSON.stringify({
         id: uuidv4(),
         userId: user.id,
-        openaiAssistantId: assistant.id,
+        openai_id: assistant.id,
+        assistantId: assistant.id,
         name: `${name}'s Assistant`,
         threadId: thread.id,
         createdAt: new Date().toISOString()
@@ -258,7 +290,7 @@ export const uploadFileToAssistant = async (
 
     // Make sure the assistant has the file_search tool
     await createOpenAIRequest(
-      `assistants/${assistant.openaiAssistantId}`,
+      `assistants/${assistant.openai_id || assistant.assistantId}`,
       "POST",
       {
         tools: [{ type: "file_search" }]
@@ -385,6 +417,7 @@ export const askQuestion = async (
       body: JSON.stringify({
         id: uuidv4(),
         threadId,
+        openaiThreadId: threadId.startsWith("thread_") ? threadId : null,
         content: question,
         role: "user",
         createdAt: new Date().toISOString()
@@ -401,7 +434,7 @@ export const askQuestion = async (
 
     // Create a run with the assistant
     const run = await createOpenAIRequest(`threads/${threadId}/runs`, "POST", {
-      assistant_id: assistant.openaiAssistantId,
+      assistant_id: assistant.openai_id || assistant.assistantId,
       tools: [{ type: "file_search" }]
     });
 
@@ -456,6 +489,7 @@ export const askQuestion = async (
       body: JSON.stringify({
         id: uuidv4(),
         threadId,
+        openaiThreadId: threadId.startsWith("thread_") ? threadId : null,
         content: responseContent,
         role: "assistant",
         createdAt: new Date().toISOString()
@@ -476,24 +510,70 @@ export const getUserMessages = async (userId: string): Promise<Message[]> => {
     const assistantResponse = await fetch(
       `${API_BASE_URL}/assistants?userId=${userId}`
     );
+
+    if (!assistantResponse.ok) {
+      console.error(
+        `Error fetching assistant: ${assistantResponse.status} ${assistantResponse.statusText}`
+      );
+      return [];
+    }
+
     const assistants = await assistantResponse.json();
+    console.log("Assistants fetched:", assistants);
 
     if (!assistants || assistants.length === 0) {
+      console.log("No assistants found for user:", userId);
       return [];
     }
 
     const assistant = assistants[0];
 
     if (!assistant.threadId) {
+      console.log("Assistant has no threadId:", assistant);
       return [];
     }
 
-    // Get messages for the thread
+    console.log("Fetching messages for threadId:", assistant.threadId);
+
+    // First try getting messages by threadId
     const messagesResponse = await fetch(
       `${API_BASE_URL}/messages?threadId=${assistant.threadId}&_sort=createdAt&_order=asc`
     );
 
-    return await messagesResponse.json();
+    if (!messagesResponse.ok) {
+      console.error(
+        `Error fetching messages: ${messagesResponse.status} ${messagesResponse.statusText}`
+      );
+      return [];
+    }
+
+    const messages = await messagesResponse.json();
+    console.log("Messages fetched:", messages.length);
+
+    // If we have messages, return them
+    if (messages.length > 0) {
+      return messages;
+    }
+
+    // If no messages found by threadId, let's try using the /user/ endpoint which looks for messages across all threads
+    console.log(
+      "No messages found by threadId, trying /messages/user/ endpoint"
+    );
+    const userMessagesResponse = await fetch(
+      `${API_BASE_URL}/messages/user/${userId}`
+    );
+
+    if (!userMessagesResponse.ok) {
+      console.error(
+        `Error fetching user messages: ${userMessagesResponse.status} ${userMessagesResponse.statusText}`
+      );
+      return [];
+    }
+
+    const userMessages = await userMessagesResponse.json();
+    console.log("User messages fetched:", userMessages.length);
+
+    return userMessages;
   } catch (error) {
     console.error("Error getting user messages:", error);
     return [];
@@ -558,10 +638,10 @@ export const deleteUser = async (userId: string): Promise<boolean> => {
     }
 
     // 4. Delete assistant from OpenAI if it exists
-    if (assistant?.openaiAssistantId) {
+    if (assistant?.openai_id) {
       try {
         await createOpenAIRequest(
-          `assistants/${assistant.openaiAssistantId}`,
+          `assistants/${assistant.openai_id}`,
           "DELETE"
         );
       } catch (assistantError) {
@@ -664,14 +744,29 @@ export const getFileContent = async (
   fileId: string
 ): Promise<{ content: string; url: string } | null> => {
   try {
+    console.log(`Getting file content for ID: ${fileId}`);
+
+    // Fix API URL path construction - handle API_BASE_URL with or without /api suffix
+    const apiUrl = API_BASE_URL.endsWith("/api")
+      ? `${API_BASE_URL}/files/${fileId}`
+      : `${API_BASE_URL}/api/files/${fileId}`;
+
+    console.log(`Fetching file data from: ${apiUrl}`);
+
     // Get file data from database
-    const fileResponse = await fetch(`${API_BASE_URL}/files/${fileId}`);
+    const fileResponse = await fetch(apiUrl);
 
     if (!fileResponse.ok) {
-      throw new Error("File not found in database");
+      console.error(
+        `File not found: ${fileResponse.status} ${fileResponse.statusText}`
+      );
+      throw new Error(
+        `File not found in database: ${fileResponse.status} ${fileResponse.statusText}`
+      );
     }
 
     const fileData = await fileResponse.json();
+    console.log(`File data retrieved:`, fileData);
 
     // For files uploaded to OpenAI assistants, we need a different approach
     // OpenAI doesn't allow direct download of assistant files, so we need to:
@@ -683,28 +778,36 @@ export const getFileContent = async (
     let content = "";
     let url = "#";
 
+    // Construct download URL for the file
+    const downloadUrl = API_BASE_URL.endsWith("/api")
+      ? `${API_BASE_URL}/files/${fileId}/download`
+      : `${API_BASE_URL}/api/files/${fileId}/download`;
+
+    console.log(`Setting download URL: ${downloadUrl}`);
+
     if (fileData.type === "text/plain") {
       // For text files, create a placeholder that shows file info
       content = `# ${fileData.name}\n\nFile ID: ${
         fileData.id
       }\nSize: ${formatFileSize(fileData.size)}\nType: ${
         fileData.type
-      }\n\nNote: OpenAI doesn't allow direct download of assistant files. The content isn't accessible outside of the assistant's context.`;
+      }\n\nNote: This is a placeholder for the file content. You can download the file to view the full content.`;
 
-      // Create a text blob for display
-      const blob = new Blob([content], { type: "text/plain" });
-      url = URL.createObjectURL(blob);
+      // Set download URL for the file
+      url = downloadUrl;
     } else if (fileData.type === "application/pdf") {
       // For PDFs, create an informational message
-      content =
-        "[PDF Content] - OpenAI doesn't allow direct download of assistant files. The PDF content is only accessible to the assistant during conversation.";
+      content = `[PDF Content] - PDF preview is not available in the browser. Please download the file to view its contents.`;
 
-      // Create a text blob for display since we can't show the actual PDF
-      const placeholderText = `PDF file "${fileData.name}" is attached to the assistant but can't be displayed directly due to OpenAI API limitations.`;
-      const blob = new Blob([placeholderText], { type: "text/plain" });
-      url = URL.createObjectURL(blob);
+      // Set download URL for the file
+      url = downloadUrl;
+    } else {
+      // For other file types
+      content = `File content preview not available for ${fileData.type}. Please download the file.`;
+      url = downloadUrl;
     }
 
+    console.log(`Returning file content with URL: ${url}`);
     return { content, url };
   } catch (error) {
     console.error("Error getting file content:", error);

@@ -44,7 +44,7 @@ const UserNameForm = () => {
       toast.success(`Welcome, ${name}! Your personal AI assistant is ready.`);
       navigate(`/chat/${user.id}`);
     } catch (error) {
-      console.error("Error creating tenant:", error);
+      console.error("Error creating user:", error);
       toast.error("Failed to create your account. Please try again.");
     } finally {
       setIsLoading(false);
@@ -60,7 +60,7 @@ const UserNameForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Input
               id="name"
               type="text"

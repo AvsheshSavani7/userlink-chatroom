@@ -8,6 +8,7 @@ import {
   File as AssistantFile
 } from "../services/assistantService";
 import { FileInfo } from "../types/file";
+import { v4 as uuidv4 } from "uuid";
 
 interface FileUploaderProps {
   onFileUploaded: (file: FileInfo) => void;
@@ -72,7 +73,7 @@ const FileUploader = ({ onFileUploaded, userId }: FileUploaderProps) => {
       const fileContent = await readFileContent(file);
 
       const fileInfo: FileInfo = {
-        id: Date.now().toString(),
+        id: uuidv4(),
         name: file.name,
         size: file.size,
         type: file.type,

@@ -21,6 +21,7 @@ interface FileViewerProps {
   fileType: string;
   onClose: () => void;
   isLoading?: boolean;
+  fileId?: string;
 }
 
 const FileViewer = ({
@@ -28,7 +29,8 @@ const FileViewer = ({
   fileName,
   fileType,
   onClose,
-  isLoading: externalLoading
+  isLoading: externalLoading,
+  fileId
 }: FileViewerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [textContent, setTextContent] = useState<string>("");
@@ -166,6 +168,48 @@ const FileViewer = ({
         ? "Switching to direct view"
         : "Switching to Google Docs Viewer"
     );
+  };
+
+  // Handle file download directly
+  const handleDownload = async () => {
+    if (!fileId) {
+      console.log("No fileId available for download");
+      if (fileUrl && fileUrl !== "#") {
+        console.log("Using fileUrl for download:", fileUrl);
+        window.open(fileUrl, "_blank");
+      } else {
+        toast.error("Cannot download this file - no file ID or URL available");
+      }
+      return;
+    }
+
+    try {
+      console.log(`Initiating download for file ID: ${fileId}`);
+      // For direct downloads using the file ID
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+
+      // Check if apiBaseUrl already contains /api to avoid duplication
+      const downloadUrl = apiBaseUrl.endsWith("/api")
+        ? `${apiBaseUrl}/files/${fileId}/download`
+        : `${apiBaseUrl}/api/files/${fileId}/download`;
+
+      console.log(`Download URL: ${downloadUrl}`);
+
+      // Create a hidden anchor element to trigger the download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", fileName);
+      link.setAttribute("target", "_blank");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Downloading ${fileName}`);
+    } catch (error) {
+      console.error("Error initiating download:", error);
+      toast.error(`Failed to download file: ${(error as Error).message}`);
+    }
   };
 
   const getFileViewerContent = () => {
@@ -353,61 +397,16 @@ const FileViewer = ({
             </h3>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {fileUrl === "#" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                toast.info(
-                  "This file is stored in OpenAI's servers and cannot be downloaded directly due to API limitations."
-                )
-              }
-              className="flex items-center gap-1"
-            >
-              <FileText size={16} />
-              <span>OpenAI File</span>
-            </Button>
-          ) : (
-            <>
-              {/* <Button
-                variant="outline"
-                size="sm"
-                onClick={openInNewTab}
-                disabled={!fileUrl || fileUrl === "#"}
-                className="flex items-center gap-1"
-                title="Open in new tab"
-              >
-                <ExternalLink size={16} />
-                <span>Open</span>
-              </Button> */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  try {
-                    // Create a download link
-                    const downloadLink = document.createElement("a");
-                    downloadLink.href = fileUrl;
-                    downloadLink.download = fileName;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                    toast.success(`Downloading ${fileName}`);
-                  } catch (error) {
-                    console.error("Download error:", error);
-                    toast.error("Failed to download file");
-                  }
-                }}
-                disabled={!fileUrl || isLoading || fileUrl === "#"}
-                className="flex items-center gap-1"
-              >
-                <Download size={16} />
-                <span>Download</span>
-              </Button>
-            </>
-          )}
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDownload}
+            title="Download file"
+            className="mr-1"
+          >
+            <Download size={18} />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -419,9 +418,7 @@ const FileViewer = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto bg-white">
-        {/* {getFileViewerContent()} */}
-      </div>
+      <div className="flex-1 overflow-auto">{getFileViewerContent()}</div>
     </Card>
   );
 };

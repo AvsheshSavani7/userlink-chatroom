@@ -168,10 +168,15 @@ const ChatPage = () => {
     if (currentUserId) {
       const loadMessages = async () => {
         try {
+          console.log("Loading messages for user:", currentUserId);
           const userMessages = await getUserMessages(currentUserId);
+          console.log("User messages loaded:", userMessages);
+
           if (userMessages && userMessages.length > 0) {
+            console.log(`Setting ${userMessages.length} messages`);
             setMessages(userMessages);
           } else {
+            console.log("No messages found, adding welcome message");
             // Add welcome message if no history
             const welcomeMessage: Message = {
               id: Date.now().toString(),
@@ -186,6 +191,18 @@ const ChatPage = () => {
           }
         } catch (error) {
           console.error("Error loading messages:", error);
+          // Instead of just showing a toast, add a welcome message here too
+          const welcomeMessage: Message = {
+            id: Date.now().toString(),
+            content: `Hello ${
+              storeName || userDetails?.name || "there"
+            }! Welcome to the AI-powered chat. How can I assist you today?`,
+            role: "assistant",
+            createdAt: new Date().toISOString()
+          };
+
+          setMessages([welcomeMessage]);
+
           toast.error("Failed to load chat history");
         }
       };
@@ -493,14 +510,15 @@ const ChatPage = () => {
         {/* Chat area - Flexible with message scroll */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* File viewer modal */}
-          {selectedFile && (
-            <div className="absolute inset-0 z-30 bg-white">
+          {selectedFile && selectedFileId && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
               <FileViewer
-                fileUrl={selectedFileContent?.url || selectedFile.url || "#"}
+                fileUrl={selectedFileContent?.url || "#"}
                 fileName={selectedFile.name}
                 fileType={selectedFile.type}
                 onClose={() => setSelectedFileId(null)}
-                isLoading={isFileLoading[selectedFile.id] || false}
+                isLoading={isFileLoading[selectedFileId]}
+                fileId={selectedFileId}
               />
             </div>
           )}
