@@ -15,9 +15,11 @@ app.use(express.json());
 let db;
 try {
   const dbPath = path.join(__dirname, "db.json");
+  console.log("dbPath", dbPath);
   if (fs.existsSync(dbPath)) {
     const rawData = fs.readFileSync(dbPath, "utf8");
     db = JSON.parse(rawData);
+    console.log("rawData", rawData);
     console.log("Database loaded from file");
   } else {
     console.log("Database file not found, using empty collections");
