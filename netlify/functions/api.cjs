@@ -15,12 +15,24 @@ app.use(express.json());
 let db;
 try {
   const dbPath = path.join(__dirname, "db.json");
-  console.log("dbPath", dbPath, db);
-  if (fs.existsSync(dbPath)) {
+  console.log("Looking for database at:", dbPath);
+  console.log("Current directory:", __dirname);
+  console.log("Directory contents:", fs.readdirSync(__dirname).join(", "));
+
+  // Check if file exists
+  const fileExists = fs.existsSync(dbPath);
+  console.log("File exists check result:", fileExists);
+
+  if (fileExists) {
+    console.log("Reading database file...");
     const rawData = fs.readFileSync(dbPath, "utf8");
+    console.log("Raw data length:", rawData.length);
     db = JSON.parse(rawData);
-    console.log("rawData", rawData);
-    console.log("Database loaded from file");
+    console.log(
+      "Database loaded with collections:",
+      Object.keys(db).join(", ")
+    );
+    console.log("Users count:", db.users.length);
   } else {
     console.log("Database file not found, using empty collections");
     // Initialize with empty collections instead of demo data
@@ -31,6 +43,15 @@ try {
       chat_threads: [],
       messages: []
     };
+
+    // Create a default database file if it doesn't exist
+    console.log("Creating default database file...");
+    try {
+      fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+      console.log("Default database file created successfully");
+    } catch (writeError) {
+      console.error("Error creating default database file:", writeError);
+    }
   }
 } catch (error) {
   console.error("Error loading database:", error);
