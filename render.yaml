@@ -2,7 +2,7 @@ services:
   - name: userlink-chatroom-api
     type: web
     env: node
-    rootDir: src/server
+    rootDir: server
     buildCommand: npm install
     startCommand: npm start
     envVars:
