@@ -1,0 +1,195 @@
+{
+  "users": [
+    {
+      "id": "8036c660-17d1-42f7-bd83-2a41b239aaf8",
+      "name": "AvsheshS",
+      "createdAt": "2025-03-19T12:38:49.240Z",
+      "assistantId": "17140d85-c893-4b3d-bf68-f39b35881e99"
+    },
+    {
+      "id": "d7ff5b82-3073-4096-a468-0a24f97f8f2c",
+      "name": "KD1",
+      "createdAt": "2025-03-19T12:52:45.403Z",
+      "assistantId": "d6bd7be4-3eec-41c5-bb74-4e021b62630e"
+    }
+  ],
+  "assistants": [
+    {
+      "id": "17140d85-c893-4b3d-bf68-f39b35881e99",
+      "userId": "8036c660-17d1-42f7-bd83-2a41b239aaf8",
+      "openaiAssistantId": "asst_uY5WMRu7sgpDk6v186QVi11u",
+      "name": "AvsheshS's Assistant",
+      "threadId": "thread_aqBWCfFfpNezZELQxOLUjurj",
+      "createdAt": "2025-03-19T12:38:50.847Z"
+    },
+    {
+      "id": "d6bd7be4-3eec-41c5-bb74-4e021b62630e",
+      "userId": "d7ff5b82-3073-4096-a468-0a24f97f8f2c",
+      "openaiAssistantId": "asst_KTFLV7gebTmWSqiEAxtZVVAn",
+      "name": "KD's Assistant",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "createdAt": "2025-03-19T12:52:47.169Z"
+    }
+  ],
+  "files": [
+    {
+      "id": "6e0f6208-203e-4fa3-88a5-7c8a05e32b40",
+      "userId": "8036c660-17d1-42f7-bd83-2a41b239aaf8",
+      "name": "openai_question_answering_guide (1) (1).txt",
+      "size": 247,
+      "type": "text/plain",
+      "openaiFileId": "file-BE2TA2NrjNyeiYAB6KYhPw",
+      "assistantId": "17140d85-c893-4b3d-bf68-f39b35881e99",
+      "createdAt": "2025-03-19T12:39:51.045Z"
+    },
+    {
+      "id": "82b3e45f-5bb7-45bd-92dc-31e3ab059772",
+      "userId": "d7ff5b82-3073-4096-a468-0a24f97f8f2c",
+      "name": "AWS_12_08_519-86.pdf",
+      "size": 182540,
+      "type": "application/pdf",
+      "openaiFileId": "file-QbWHJSUBsaAGzPp5SNwYjk",
+      "assistantId": "d6bd7be4-3eec-41c5-bb74-4e021b62630e",
+      "createdAt": "2025-03-19T12:53:27.415Z"
+    },
+    {
+      "id": "c61a926e-991b-4de5-9e14-d7337f0b9fba",
+      "userId": "d7ff5b82-3073-4096-a468-0a24f97f8f2c",
+      "name": "A4 -Parth Resume (1) (1).pdf",
+      "size": 2885376,
+      "type": "application/pdf",
+      "openaiFileId": "file-Tq6jy65YsMgNVEAMUwiQiX",
+      "assistantId": "d6bd7be4-3eec-41c5-bb74-4e021b62630e",
+      "createdAt": "2025-03-19T12:54:56.960Z"
+    }
+  ],
+  "chat_threads": [],
+  "messages": [
+    {
+      "id": "88628674-f91a-4ef8-8469-a689f003d612",
+      "threadId": "thread_k8pA0VE2D0hPbH3Bwqtu4qaI",
+      "content": "how to install openai?",
+      "role": "user",
+      "createdAt": "2025-03-19T11:37:32.525Z"
+    },
+    {
+      "id": "664f9529-3690-40d8-b44f-9bf849adf59b",
+      "threadId": "thread_k8pA0VE2D0hPbH3Bwqtu4qaI",
+      "content": "To install OpenAI, you need to follow these steps:\n\n1. **Sign Up for OpenAI**:  \n   Go to [OpenAI's platform](https://platform.openai.com/) and sign up for an account if you don't have one.\n\n2. **Generate an API Key**:  \n   Once signed in, navigate to your account settings to generate an API key. This key is necessary for authenticating your requests to OpenAI's services.\n\n3. **Install OpenAI SDK**:  \n   If you're using Node.js, you can install the OpenAI SDK via npm with the command:\n\n   ```bash\n   npm install openai\n   ```\n   \n4. **API Setup in Code**:  \n   Here's a simple setup example in JavaScript:\n\n   ```javascript\n   const { OpenAI } = require(\"openai\");\n\n   const createOpenAIClient = () => {\n     const apiKey = 'YOUR_API_KEY';  // Replace with your actual OpenAI API Key\n     return new OpenAI({\n       apiKey,\n       dangerouslyAllowBrowser: true, // Use in browser (only in dev environments)\n     });\n   };\n\n   const openai = createOpenAIClient();\n   ```\n\n5. **Make an API Call**:  \n   To interact with the OpenAI models, you'll use the chat endpoint. Here is an example for making a request:\n\n   ```javascript\n   const askQuestion = async (question) => {\n     try {\n       const response = await openai.chat.completions.create({\n         model: 'gpt-4',  // You can choose 'gpt-3.5-turbo' as well\n         messages: [\n           { role: 'system', content: 'You are a helpful assistant.' },\n           { role: 'user', content: question }\n         ],\n       });\n\n       console.log('Answer:', response.choices[0].message.content);\n     } catch (error) {\n       console.error(\"Error:\", error);\n     }\n   };\n\n   // Example usage\n   askQuestion(\"What is the capital of France?\");\n   ```\n\nFollowing these steps will have you set up with OpenAI quickly, allowing you to start making API calls for question-answering or other tasks【5:0†openai_question_answering_guide.txt】.",
+      "role": "assistant",
+      "createdAt": "2025-03-19T11:37:42.984Z"
+    },
+    {
+      "id": "efa592f3-2cf9-4f38-b78f-28a7cd0d46f2",
+      "threadId": "thread_k8pA0VE2D0hPbH3Bwqtu4qaI",
+      "content": "give me createOpenAIClient fucntion",
+      "role": "user",
+      "createdAt": "2025-03-19T11:38:48.970Z"
+    },
+    {
+      "id": "5ec3d9c3-f711-4c52-889a-1a902c0a9da1",
+      "threadId": "thread_k8pA0VE2D0hPbH3Bwqtu4qaI",
+      "content": "The `createOpenAIClient` function can be set up as follows:\n\n```javascript\nconst { OpenAI } = require(\"openai\");\n\nconst createOpenAIClient = () => {\n  const apiKey = 'YOUR_API_KEY';  // Replace with your actual OpenAI API Key\n  return new OpenAI({\n    apiKey,\n    dangerouslyAllowBrowser: true, // Use in browser (only in dev environments)\n  });\n};\n\nconst openai = createOpenAIClient();\n```\n\nIn this function:\n- Replace `'YOUR_API_KEY'` with your actual OpenAI API Key.\n- The `dangerouslyAllowBrowser` option is set to `true` only for development purposes if you're running the code in a browser. For production environments, make sure to use server-side execution or secure the key properly.",
+      "role": "assistant",
+      "createdAt": "2025-03-19T11:38:55.632Z"
+    },
+    {
+      "id": "3622b564-afe2-4dc6-87d2-cac387d2ad15",
+      "threadId": "thread_k8pA0VE2D0hPbH3Bwqtu4qaI",
+      "content": "What is AI?",
+      "role": "user",
+      "createdAt": "2025-03-19T12:04:22.990Z"
+    },
+    {
+      "id": "a4f3cb81-f38e-4613-8ca5-12a347394a17",
+      "threadId": "thread_k8pA0VE2D0hPbH3Bwqtu4qaI",
+      "content": "Artificial Intelligence (AI) refers to the capability of machines to mimic human cognitive functions such as learning, problem-solving, perception, and decision-making. AI systems are designed to work on tasks that require human intelligence, including visual perception, speech recognition, decision-making, and language translation【12:0†Understanding_Artificial_Intelligence.pdf】.",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:04:29.111Z"
+    },
+    {
+      "id": "87b846c7-c18a-4b51-877b-851ac7b0eec8",
+      "threadId": "thread_ECVKTMAn8Yev4bcpP7jtgnnY",
+      "content": "what is AI?",
+      "role": "user",
+      "createdAt": "2025-03-19T12:23:18.796Z"
+    },
+    {
+      "id": "17e29106-9702-46c8-8e32-2baa17bceb33",
+      "threadId": "thread_ECVKTMAn8Yev4bcpP7jtgnnY",
+      "content": "Artificial Intelligence (AI) refers to the simulation of human intelligence processes by machines, especially computer systems. These processes include learning, reasoning, problem-solving, perception, and language understanding. AI has become a crucial part of the technology industry, helping to solve complex problems in computer science and many other fields【6:0†Understanding_Artificial_Intelligence.pdf】.",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:23:26.884Z"
+    },
+    {
+      "id": "da5a662e-6589-434f-968c-b7f1c3e8081d",
+      "threadId": "thread_ECVKTMAn8Yev4bcpP7jtgnnY",
+      "content": "How to install Open AI?",
+      "role": "user",
+      "createdAt": "2025-03-19T12:23:42.079Z"
+    },
+    {
+      "id": "f9301bc1-c82f-490a-9c5b-62fb0c3e4b91",
+      "threadId": "thread_ECVKTMAn8Yev4bcpP7jtgnnY",
+      "content": "To install OpenAI, you need to set up the OpenAI API. Here are the steps:\n\n1. **Sign Up for OpenAI**: Visit the [OpenAI platform](https://platform.openai.com/) and sign up for an account if you don't have one.\n\n2. **Generate an API Key**: Once you are logged in, go to your account settings to generate an API key. This key is necessary to authenticate your requests.\n\n3. **Install OpenAI SDK**: You can use the Node.js SDK by installing it via npm. Run the following command:\n\n   ```bash\n   npm install openai\n   ```\n\n4. **API Setup in Code**: You can set up the API in your code as follows (using JavaScript):\n\n   ```javascript\n   const { OpenAI } = require(\"openai\");\n\n   const createOpenAIClient = () => {\n     const apiKey = 'YOUR_API_KEY';  // Replace with your OpenAI API Key\n     \n     return new OpenAI({\n       apiKey,\n       dangerouslyAllowBrowser: true, // Use in browser (only in dev environments)\n     });\n   };\n\n   const openai = createOpenAIClient();\n   ```\n\n5. **Making a Question-Answer API Call**: You can ask a question and get an answer using the API as shown below:\n\n   ```javascript\n   const askQuestion = async (question) => {\n     try {\n       const response = await openai.chat.completions.create({\n         model: 'gpt-4',  // You can use 'gpt-3.5-turbo' as well\n         messages: [\n           { role: 'system', content: 'You are a helpful assistant.' },\n           { role: 'user', content: question }\n         ],\n       });\n\n       console.log('Answer:', response.choices[0].message.content);\n     } catch (error) {\n       console.error(\"Error:\", error);\n     }\n   };\n\n   // Example usage\n   askQuestion(\"What is the capital of France?\");\n   ```\n\nThese steps will help you set up and interact with OpenAI's API for various AI capabilities such as question-answering【10:0†openai_question_answering_guide (1).txt】.",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:23:53.747Z"
+    },
+    {
+      "id": "3361c33f-dcab-4624-a92f-fd6221e4ce1f",
+      "threadId": "thread_aqBWCfFfpNezZELQxOLUjurj",
+      "content": "what is AI?",
+      "role": "user",
+      "createdAt": "2025-03-19T12:40:14.870Z"
+    },
+    {
+      "id": "bb0e1e5a-459a-43a8-894f-15fe6b8ba6ad",
+      "threadId": "thread_aqBWCfFfpNezZELQxOLUjurj",
+      "content": "AI, or Artificial Intelligence, refers to the simulation of human intelligence in machines that are designed to think and learn like humans. These machines can be programmed to perform tasks such as recognizing speech, solving problems, learning from data, and making decisions. AI can range from simple algorithms to advanced systems that can process large amounts of information to make informed decisions. \n\nUnfortunately, the specific definition from the \"openai_question_answering_guide (1) (1).txt\" document was not found, but the general idea of AI is as described above.",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:40:22.531Z"
+    },
+    {
+      "id": "82ceb064-b2c9-4c1a-86ca-20d4895bfb7c",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "content": "Name",
+      "role": "user",
+      "createdAt": "2025-03-19T12:53:02.225Z"
+    },
+    {
+      "id": "0e78afb4-0a07-4d51-8f74-93fb6f7bb8a3",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "content": "I am your personal assistant, and I don't have a specific name. Feel free to call me whatever you like!",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:53:07.323Z"
+    },
+    {
+      "id": "7720e577-1dd4-4166-9ade-52f5b730c3ae",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "content": "Give me Billing period",
+      "role": "user",
+      "createdAt": "2025-03-19T12:54:08.473Z"
+    },
+    {
+      "id": "ef7aaa80-cd66-4136-83bb-69b62de5af9e",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "content": "It seems I couldn't extract the specific details you need about the billing period from the document. If you would like, I can help with another question or assist you in another way!",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:54:14.739Z"
+    },
+    {
+      "id": "6a920cf7-97d9-44f9-bc9a-2e428b483b17",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "content": "Show me education",
+      "role": "user",
+      "createdAt": "2025-03-19T12:55:22.509Z"
+    },
+    {
+      "id": "4f6191a1-9c93-4555-ba16-8c18948f116a",
+      "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
+      "content": "I wasn't able to extract the specific details about the education section from the resume you uploaded. If you have other questions or if there's anything else I can do to help, please let me know!",
+      "role": "assistant",
+      "createdAt": "2025-03-19T12:55:28.693Z"
+    }
+  ]
+}

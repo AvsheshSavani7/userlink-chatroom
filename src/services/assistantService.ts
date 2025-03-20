@@ -1,9 +1,14 @@
 import { OpenAI } from "openai";
 import { v4 as uuidv4 } from "uuid";
 
-// API base URL
+// API base URL - Priority:
+// 1. Environment variable
+// 2. Render deployment URL (if using Render)
+// 3. Local development server
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3002";
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_RENDER_API_URL ||
+  "http://localhost:3002";
 
 // Initialize OpenAI client with API key from environment variable or .env
 const getApiKey = () => {
