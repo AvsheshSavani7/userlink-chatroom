@@ -115,6 +115,20 @@ if (isRender) {
     // Use default middlewares (logger, static, cors)
     server.use(middlewares);
 
+    // Add custom middleware for logging
+    server.use((req, res, next) => {
+      console.log(`${req.method} ${req.url}`);
+      next();
+    });
+
+    // Add created date for new users
+    server.use((req, res, next) => {
+      if (req.method === "POST" && req.path === "/users") {
+        req.body.createdAt = new Date().toISOString();
+      }
+      next();
+    });
+
     // Save the database state to file after write operations
     router.render = (req, res) => {
       // Only save for write operations

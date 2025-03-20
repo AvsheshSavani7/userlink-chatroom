@@ -2,10 +2,14 @@ services:
   - name: userlink-chatroom-api
     type: web
     env: node
-    rootDir: src/server
+    rootDir: server
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.js
     envVars:
       - key: PORT
         value: 10000
+      - key: RENDER
+        value: "true"
+      - key: NODE_ENV
+        value: "production"
     autoDeploy: true 
