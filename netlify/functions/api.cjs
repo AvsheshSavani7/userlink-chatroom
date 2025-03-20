@@ -15,7 +15,7 @@ app.use(express.json());
 let db;
 try {
   const dbPath = path.join(__dirname, "db.json");
-  console.log("dbPath", dbPath);
+  console.log("dbPath", dbPath, db);
   if (fs.existsSync(dbPath)) {
     const rawData = fs.readFileSync(dbPath, "utf8");
     db = JSON.parse(rawData);
