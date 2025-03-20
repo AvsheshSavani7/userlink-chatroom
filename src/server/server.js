@@ -7,7 +7,7 @@ const { spawn } = require("child_process");
 // Create server
 const server = express();
 
-// Set port
+// Set ports
 const PORT = process.env.PORT || 3002;
 
 // Enable CORS for all origins
@@ -31,15 +31,33 @@ if (!fs.existsSync(dbPath)) {
 }
 
 // Root route for basic information
-server.get("/health", (req, res) => {
+server.get("/", (req, res) => {
   res.json({
     message: "UserLink Chatroom API is running",
     endpoints: ["/users", "/assistants", "/files", "/messages"]
   });
 });
 
-// Start JSON Server as a child process
+// Health check endpoint for Render
+server.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    message: "API is running"
+  });
+});
+
+// Detect if we're running on Render
+const isRender = process.env.RENDER === "true" || process.env.RENDER === "1";
+
+// Function to start JSON Server as a child process
 const startJsonServer = () => {
+  // On Render, we'll skip the child process and directly use json-server
+  if (isRender) {
+    console.log("Running on Render, using json-server package directly");
+    // We won't spawn a child process - instead we'll initialize json-server later
+    return null;
+  }
+
   const jsonServerPath = path.resolve(
     process.cwd(),
     "node_modules/.bin/json-server"
@@ -57,11 +75,11 @@ const startJsonServer = () => {
     ]);
 
     jsonServer.stdout.on("data", (data) => {
-      console.log(`JSON Server: ${data}`);
+      console.log(`JSON Server: ${data.toString()}`);
     });
 
     jsonServer.stderr.on("data", (data) => {
-      console.error(`JSON Server Error: ${data}`);
+      console.error(`JSON Server Error: ${data.toString()}`);
     });
 
     return jsonServer;
@@ -76,28 +94,66 @@ const startJsonServer = () => {
     ]);
 
     jsonServer.stdout.on("data", (data) => {
-      console.log(`JSON Server: ${data}`);
+      console.log(`JSON Server: ${data.toString()}`);
     });
 
     jsonServer.stderr.on("data", (data) => {
-      console.error(`JSON Server Error: ${data}`);
+      console.error(`JSON Server Error: ${data.toString()}`);
     });
 
     return jsonServer;
   }
 };
 
-// Start the JSON Server
-const jsonServerProcess = startJsonServer();
+// For Render deployment, we'll directly use json-server
+if (isRender) {
+  try {
+    const jsonServer = require("json-server");
+    const router = jsonServer.router(dbPath);
+    const middlewares = jsonServer.defaults();
 
-// Handle process termination
-process.on("SIGINT", () => {
-  console.log("Shutting down server...");
-  if (jsonServerProcess) {
-    jsonServerProcess.kill();
+    // Use default middlewares (logger, static, cors)
+    server.use(middlewares);
+
+    // Save the database state to file after write operations
+    router.render = (req, res) => {
+      // Only save for write operations
+      if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+        console.log(`Saved database after ${req.method} operation`);
+      }
+      res.json(res.locals.data);
+    };
+
+    // Use router
+    server.use(router);
+
+    // Start the server
+    server.listen(PORT, () => {
+      console.log(`JSON Server is running on port ${PORT}`);
+      console.log(`API Base URL: http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Error setting up json-server:", error);
+    // If json-server fails, at least start the express server
+    server.listen(PORT, () => {
+      console.log(
+        `Express server is running on port ${PORT} (json-server failed to load)`
+      );
+    });
   }
-  process.exit(0);
-});
+} else {
+  // For local development, start JSON Server as child process
+  const jsonServerProcess = startJsonServer();
 
-console.log(`Server starting on port ${PORT}`);
-console.log(`API Base URL: http://localhost:${PORT}`);
+  // Handle process termination
+  process.on("SIGINT", () => {
+    console.log("Shutting down server...");
+    if (jsonServerProcess) {
+      jsonServerProcess.kill();
+    }
+    process.exit(0);
+  });
+
+  console.log(`Server starting on port ${PORT}`);
+  console.log(`API Base URL: http://localhost:${PORT}`);
+}

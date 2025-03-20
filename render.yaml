@@ -8,4 +8,6 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      - key: RENDER
+        value: "true"
     autoDeploy: true 
