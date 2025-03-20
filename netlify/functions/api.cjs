@@ -76,6 +76,7 @@ app.get("/api/:resource/:id", (req, res) => {
   if (!db[resource]) {
     return res.status(404).json({ error: `Resource "${resource}" not found` });
   }
+  console.log("db[resource]", db[resource]);
 
   const item = db[resource].find((item) => item.id === id);
   if (!item) {

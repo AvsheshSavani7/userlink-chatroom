@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // API base URL
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3002";
 
 // Initialize OpenAI client with API key from environment variable or .env
 const getApiKey = () => {

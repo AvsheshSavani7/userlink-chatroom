@@ -116,7 +116,7 @@ const ChatPage = () => {
           // Fetch user data from the API
           const response = await fetch(
             `${
-              import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+              import.meta.env.VITE_API_BASE_URL || "http://localhost:3002"
             }/users/${userId}`
           );
 

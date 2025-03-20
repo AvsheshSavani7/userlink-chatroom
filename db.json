@@ -11,6 +11,18 @@
       "name": "KD",
       "createdAt": "2025-03-19T12:52:45.403Z",
       "assistantId": "d6bd7be4-3eec-41c5-bb74-4e021b62630e"
+    },
+    {
+      "id": "47d7292a-b7c9-4a48-8278-dcbb7008e736",
+      "name": "JEnny",
+      "createdAt": "2025-03-20T04:00:19.416Z",
+      "assistantId": "7db1dab3-58ec-4fdc-ad77-43b82acbef87"
+    },
+    {
+      "id": "65161fd8-1b3a-4f57-95dd-65d48870182d",
+      "name": "Ashish",
+      "createdAt": "2025-03-20T04:34:43.327Z",
+      "assistantId": "a7a9ce2e-1499-4209-9b5a-3f3deb2357a7"
     }
   ],
   "assistants": [
@@ -29,6 +41,22 @@
       "name": "KD's Assistant",
       "threadId": "thread_3fh2tmNpx2OiPMeOhJSugA4X",
       "createdAt": "2025-03-19T12:52:47.169Z"
+    },
+    {
+      "id": "7db1dab3-58ec-4fdc-ad77-43b82acbef87",
+      "userId": "47d7292a-b7c9-4a48-8278-dcbb7008e736",
+      "openaiAssistantId": "asst_76XJTG1813wXoJKEmhQ7wXlM",
+      "name": "JEnny's Assistant",
+      "threadId": "thread_9dAd24bcMfLDQDSyt255g1eK",
+      "createdAt": "2025-03-20T04:00:21.524Z"
+    },
+    {
+      "id": "a7a9ce2e-1499-4209-9b5a-3f3deb2357a7",
+      "userId": "65161fd8-1b3a-4f57-95dd-65d48870182d",
+      "openaiAssistantId": "asst_2edIo6nfgeUtYcRAgqNYH9Ko",
+      "name": "Ashish's Assistant",
+      "threadId": "thread_M3jMFjrISSKn0qZylip286oD",
+      "createdAt": "2025-03-20T04:34:44.940Z"
     }
   ],
   "files": [
@@ -61,6 +89,16 @@
       "openaiFileId": "file-Tq6jy65YsMgNVEAMUwiQiX",
       "assistantId": "d6bd7be4-3eec-41c5-bb74-4e021b62630e",
       "createdAt": "2025-03-19T12:54:56.960Z"
+    },
+    {
+      "id": "1dfc3403-a207-4dd7-bcca-5b878f754049",
+      "userId": "47d7292a-b7c9-4a48-8278-dcbb7008e736",
+      "name": "Understanding_Artificial_Intelligence.pdf",
+      "size": 2900,
+      "type": "application/pdf",
+      "openaiFileId": "file-SfZmDa8TCttVHDczh7eH8V",
+      "assistantId": "7db1dab3-58ec-4fdc-ad77-43b82acbef87",
+      "createdAt": "2025-03-20T04:00:52.460Z"
     }
   ],
   "chat_threads": [],
